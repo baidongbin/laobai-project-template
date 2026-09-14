@@ -13,7 +13,7 @@ doc_status: active
 |---|---|---|
 | 两档预设 | [Lite](../templates/lite/README.md)、[Standard](../templates/standard/README.md) | 提供可独立复制的项目文档与配置 |
 | 扩展库 | [扩展说明](../extensions/README.md) | 定义扩展模板到业务项目路径的映射 |
-| 接入流程 | [初始化](../guides/initialize.md)、[已有项目接入](../guides/adopt.md)、[更新](../guides/update.md) | 按 [项目选择](../guides/project-options.md) 沿用已有决定，集中确认未知项，再填充、合并和核验 |
+| 接入流程 | [初始化](../guides/initialize.md)、[已有项目接入](../guides/adopt.md)、[更新](../guides/update.md) | 按 [项目选择](../guides/project-options.md) 沿用已有决定，集中确认未知选项及未决实质差异，再填充、合并和核验 |
 | 大型项目扩展 | [扩展指南](../guides/large-projects.md) | 提供扩展指南及模块规则、领域架构、环境模板；跨模块任务复用既有计划，不提供第三档预设 |
 | 工具适配 | [工具接入](../guides/tool-access.md) | 根级公共入口与 Claude 导入 |
 | 检查器 | [validate.py](../scripts/validate.py) | 只读结构、一致性与模拟落位检查 |
@@ -37,7 +37,7 @@ doc_status: active
 
 ## 文档状态与接续
 
-仅启用文档基线时，Lite 在根 README、Standard 在 docs/README 统一记录基线、覆盖范围和待核对内容；AGENTS 给出直接入口及比较、同步、更新规则。该记录不等于文档有效状态或业务验收，不自动解析提交或执行核验。
+仅启用文档基线时才建立唯一核对记录；新建入口默认 Lite 在根 README、Standard 在 docs/README，已有项目原位复用有效入口。旧机制与新版存在实质差异时先询问保留或切换，采用新机制不自动迁移入口。记录包含基线、覆盖范围和待核对内容；AGENTS 给出直接入口及比较、同步、更新规则。该记录不等于文档有效状态或业务验收，不自动解析提交或执行核验。
 
 未启用基线的项目仍按实际改动同步文档；任务接续提交、版本设计基线和发布标识不受此选项影响。本模板仓库继续采用已确认的基线、源码 ZIP 打包及自动提交推送策略。
 
