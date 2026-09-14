@@ -1,0 +1,16 @@
+# 通用本机文件；按技术栈补充构建产物，不全量忽略工具配置目录。
+.DS_Store
+Thumbs.db
+
+# 本地环境变量；示例文件只允许使用安全占位值。
+.env
+.env.*
+!.env.example
+!.env.*.example
+!.env.sample
+
+# Claude Code 的个人项目指令不进入共享仓库。
+CLAUDE.local.md
+
+# 本地打包产物
+/*.zip
