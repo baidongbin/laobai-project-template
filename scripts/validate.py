@@ -10,8 +10,9 @@ from urllib.parse import unquote, urlsplit
 
 
 ROOT = Path(__file__).resolve().parents[1]
-BASE_FILES = {"README.md", "AGENTS.md", ".gitignore", ".editorconfig", "package.sh",
+BASE_FILES = {"README.md", "AGENTS.md", ".gitignore", ".editorconfig",
               "docs/product.md", "docs/architecture.md"}
+OPTIONAL_FILES = {"package.sh"}
 STANDARD_FILES = {"docs/README.md", "docs/development.md", "docs/testing.md"}
 SHARED = ("docs/product.md", "docs/architecture.md", ".gitignore", ".editorconfig", "package.sh")
 EXTENSIONS = {
@@ -117,6 +118,39 @@ def common_rules(text):
     return {section.splitlines()[0]: section for section in sections if section and section.splitlines()[0] in wanted}
 
 
+def select_options(files, baseline, package):
+    """仅用于检查的内存样例；按指南取舍可选块，不写入或更新项目。"""
+    selected = {}
+    enabled = {"baseline": baseline, "package": package}
+    for name, text in files.items():
+        if name == "package.sh" and not package:
+            continue
+        lines = []
+        current = None
+        for line in text.splitlines(True):
+            if "<!-- OPTIONAL:" in line:
+                match = re.fullmatch(r"<!-- OPTIONAL:(baseline|package):(BEGIN|END) -->\n?", line)
+                if not match:
+                    raise ValueError(f"{name}: 非法可选块标记")
+                option, boundary = match.groups()
+                if boundary == "BEGIN":
+                    if current is not None:
+                        raise ValueError(f"{name}: 可选块不能嵌套")
+                    current = option
+                else:
+                    if current != option:
+                        raise ValueError(f"{name}: 可选块结束不匹配")
+                    current = None
+            elif current is None or enabled[current]:
+                lines.append(line)
+        if current is not None:
+            raise ValueError(f"{name}: 可选块未闭合")
+        selected[name] = "".join(lines)
+    if not package and ".gitignore" in selected:
+        selected[".gitignore"] = selected[".gitignore"].replace("# 本地打包产物\n/*.zip\n", "")
+    return selected
+
+
 def validate(root):
     files = {}
     errors = []
@@ -164,20 +198,31 @@ def validate(root):
     for preset in ("lite", "standard"):
         prefix = f"templates/{preset}/"
         instance = {name[len(prefix):]: text for name, text in files.items() if name.startswith(prefix)}
-        expected = BASE_FILES | (STANDARD_FILES if preset == "standard" else set())
+        expected = BASE_FILES | OPTIONAL_FILES | (STANDARD_FILES if preset == "standard" else set())
         if set(instance) != expected:
             errors.append(f"{preset}: 预设文件集合错误: {sorted(set(instance) ^ expected)}")
-        for stage in ("基础", "扩展"):
-            if stage == "扩展":
-                for index, (source, target) in enumerate(EXTENSIONS.items()):
-                    instance[target] = files.get(f"extensions/{source}.template", "").replace("{{TASK_ID}}", str(index))
-                instance["CLAUDE.md"] = files.get("adapters/claude/CLAUDE.md.template", "")
-                if instance["CLAUDE.md"].strip() != "@AGENTS.md":
-                    errors.append("Claude 入口应只导入 @AGENTS.md")
-            count, issues = check_links(instance, f"{preset}/{stage}")
-            errors.extend(issues)
-            errors.extend(check_metadata(instance, f"{preset}/{stage}"))
-            details.append(f"{preset} {stage}链接 {count} 处")
+        for baseline, package in ((False, False), (False, True), (True, False), (True, True)):
+            label = f"{preset}/基线{'开' if baseline else '关'}-打包{'开' if package else '关'}"
+            try:
+                selected = select_options(instance, baseline, package)
+            except ValueError as error:
+                errors.append(f"{label}: {error}")
+                continue
+            if not baseline and any("doc-check" in text for text in selected.values()):
+                errors.append(f"{label}: 未启用基线仍有核对入口")
+            if not package and any("package.sh" in text for text in selected.values()):
+                errors.append(f"{label}: 未启用打包仍有脚本入口")
+            for stage in ("基础", "扩展"):
+                if stage == "扩展":
+                    for index, (source, target) in enumerate(EXTENSIONS.items()):
+                        selected[target] = files.get(f"extensions/{source}.template", "").replace("{{TASK_ID}}", str(index))
+                    selected["CLAUDE.md"] = files.get("adapters/claude/CLAUDE.md.template", "")
+                    if selected["CLAUDE.md"].strip() != "@AGENTS.md":
+                        errors.append("Claude 入口应只导入 @AGENTS.md")
+                count, issues = check_links(selected, f"{label}/{stage}")
+                errors.extend(issues)
+                errors.extend(check_metadata(selected, f"{label}/{stage}"))
+                details.append(f"{label} {stage}链接 {count} 处")
     return errors, details
 
 

@@ -58,8 +58,10 @@ doc_status: draft
 - 验证方式：[测试说明](testing.md)。
 - 用户入口：[项目 README](../README.md)。
 
-## 打包
+<!-- OPTIONAL:package:BEGIN -->
+## 源码 ZIP 打包
 
 在项目根目录执行 `sh package.sh`（需要 Git；Windows 使用 Git Bash/WSL）。
 
 [package.sh](../package.sh) 将已提交的 HEAD 打成根目录下的 `<项目名>-<短HEAD>.zip`，方便上传给 AI 或分享。未提交内容不包含在内；同名包直接替换，成功后清理根目录中本项目的其他普通旧包，只保留最新包；归档生成失败时保留旧包；若替换后的旧包清理失败，新包已生成，旧包可能部分保留。
+<!-- OPTIONAL:package:END -->

@@ -34,6 +34,32 @@ class ValidationTests(unittest.TestCase):
         errors, _ = validator.validate(self.root)
         self.assertEqual(errors, [])
 
+    def test_disabled_options_leave_usable_core(self):
+        for preset in ("lite", "standard"):
+            with self.subTest(preset=preset):
+                directory = self.root / "templates" / preset
+                files = {p.relative_to(directory).as_posix(): p.read_text()
+                         for p in directory.rglob("*") if p.is_file()}
+                selected = validator.select_options(files, baseline=False, package=False)
+                expected = validator.BASE_FILES | (validator.STANDARD_FILES if preset == "standard" else set())
+                self.assertEqual(set(selected), expected)
+                self.assertEqual(validator.check_links(selected, preset)[1], [])
+                self.assertNotIn("/*.zip", selected[".gitignore"])
+                self.assertNotIn("OPTIONAL:", "".join(selected.values()))
+                self.assertNotIn("doc-check", "".join(selected.values()))
+                self.assertIn("同步受影响的权威文档", selected["AGENTS.md"])
+                self.assertIn("仅在用户明确要求推送时执行", selected["AGENTS.md"])
+
+    def test_disabled_option_catches_stray_entry(self):
+        path = self.root / "templates/standard/README.md"
+        path.write_text(path.read_text() + "\n[遗漏的打包入口](package.sh)\n")
+        self.assert_failure("未启用打包仍有脚本入口")
+        self.assert_failure("链接目标不存在")
+
+    def test_broken_optional_marker_is_reported(self):
+        self.change("templates/lite/README.md", "OPTIONAL:baseline:END", "OPTIONAL:package:END")
+        self.assert_failure("可选块结束不匹配")
+
     def test_missing_link_and_anchor(self):
         path = self.root / "README.md"
         path.write_text(path.read_text() + "\n[缺失](absent.md)\n[锚点](README.md#absent)\n")

@@ -47,16 +47,20 @@
 - [开发说明](docs/development.md)：完整环境、开发、调试及按需构建说明。
 - [测试说明](docs/testing.md)：验证命令、通过条件及环境限制。
 
-## 打包
+<!-- OPTIONAL:package:BEGIN -->
+## 源码 ZIP 打包
 
 在项目根目录执行 `sh package.sh`，生成 `<项目名>-<短HEAD>.zip`，仅包含已提交内容。同名替换，成功后仅保留本项目最新包；依赖和详细行为见 [开发说明](docs/development.md)。
+<!-- OPTIONAL:package:END -->
 
 ## 文档导航
 
 - [产品目标与范围](docs/product.md)
 - [当前架构与代码入口](docs/architecture.md)
 - [AI 协作规则](AGENTS.md)
+<!-- OPTIONAL:baseline:BEGIN -->
 - [文档核对状态](docs/README.md#doc-check)
+<!-- OPTIONAL:baseline:END -->
 - [完整文档导航](docs/README.md)
 
 部署、贡献方式、路线图和许可证按实际情况补充，不为不存在的文件预建链接。
